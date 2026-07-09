@@ -18,7 +18,7 @@ export const fetchMemos = async (): Promise<Memo[]> => {
   return data;
 };
 
-// 2. 새 메모를 입력
+// 2. 새 메모를 입력하고 백엔드에서 입력된 메모를 리턴
 export const createMemo = async (newMemo: Memo): Promise<Memo> => {
   const { data } = await api.post("/memos", newMemo);
   return data;
