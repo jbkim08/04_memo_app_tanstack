@@ -1,0 +1,9 @@
+{
+  "memos": [
+    {
+      "id": "1",
+      "title": "첫 번째 메모",
+      "content": "TanStack Query useMutation을 배워봅시다."
+    }
+  ]
+}
