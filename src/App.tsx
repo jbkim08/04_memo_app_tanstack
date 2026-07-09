@@ -1,12 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { api } from "./api";
-import type { Memo } from "./api";
-
-// 1. 메모 목록을 가져오는 API 함수
-const fetchMemos = async (): Promise<Memo[]> => {
-  const { data } = await api.get("/memos");
-  return data;
-};
+import { fetchMemos, type Memo } from "./api";
 
 function App() {
   // 2. useQuery를 통한 데이터 패칭
