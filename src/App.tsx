@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createMemo, fetchMemos, type Memo } from "./api";
+import { createMemo, deleteMemo, fetchMemos, type Memo } from "./api";
 import { useState } from "react";
 
 function App() {
@@ -26,6 +26,37 @@ function App() {
       setContent("");
     },
   });
+  // 삭제 Mutation (낙관적 업데이트 적용)
+  const deleteMutation = useMutation({
+    mutationFn: deleteMemo,
+    // 1. 요청 직후 실행: UI를 먼저 변경
+    onMutate: async (deletedId) => {
+      // 진행 중인 데이터 갱신을 멈춤 (충돌 방지)
+      await queryClient.cancelQueries({ queryKey: ["memos"] });
+      // 에러 시 되돌리기 위해 현재(이전) 데이터를 백업
+      const previousMemos = queryClient.getQueryData(["memos"]);
+      // 캐시를 즉시 수정하여 화면에서 해당 메모 제거
+      queryClient.setQueryData(["memos"], (old: Memo[] | undefined) =>
+        old ? old.filter((memo) => memo.id !== deletedId) : [],
+      );
+      // 백업 데이터를 반환 (onError에서 사용)
+      return { previousMemos };
+    },
+    // 2. 에러 발생 시: 백업해둔 데이터로 롤백
+    onError: (_err, _deletedId, context) => {
+      if (context?.previousMemos) {
+        queryClient.setQueryData(["memos"], context.previousMemos);
+      }
+    },
+    // 3. 성공/실패 무관하게 종료 시: 서버와 최종 동기화
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["memos"] });
+    },
+  });
+  //삭제 이벤트 처리 함수
+  const handleDelete = (id: string | undefined) => {
+    if (id) deleteMutation.mutate(id);
+  };
   //서브밋 이벤트 처리함수
   const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
@@ -95,7 +126,10 @@ function App() {
                 <button className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded">
                   수정
                 </button>
-                <button className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded">
+                <button
+                  onClick={() => handleDelete(memo.id)}
+                  className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+                >
                   삭제
                 </button>
               </div>

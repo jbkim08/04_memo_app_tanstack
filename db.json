@@ -1,14 +1,14 @@
 {
   "memos": [
     {
-      "id": "1",
-      "title": "첫 번째 메모",
-      "content": "TanStack Query useMutation을 배워봅시다."
-    },
-    {
       "title": "두번째 메모",
       "content": "새로운 메모를 입력하면 성공시 무효화가 되어 새로 메모들을 가져옵니다.",
       "id": "MisNaHXf_yg"
+    },
+    {
+      "title": "삭제가 잘됩니다.",
+      "content": "삭제",
+      "id": "ne0vfLuryf8"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

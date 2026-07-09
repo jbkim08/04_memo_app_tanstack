@@ -23,3 +23,8 @@ export const createMemo = async (newMemo: Memo): Promise<Memo> => {
   const { data } = await api.post("/memos", newMemo);
   return data;
 };
+
+// 3. id로 메모를 삭제
+export const deleteMemo = async (id: string): Promise<void> => {
+  await api.delete(`/memos/${id}`);
+};
