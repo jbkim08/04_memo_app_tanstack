@@ -1,11 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createMemo, deleteMemo, fetchMemos, type Memo } from "./api";
+import {
+  createMemo,
+  deleteMemo,
+  fetchMemos,
+  updateMemo,
+  type Memo,
+} from "./api";
 import { useState } from "react";
 
 function App() {
   const queryClient = useQueryClient(); //쿼리 무효화 위해 클라이언트 가져오기
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  // [추가] 수정 모드 관리를 위한 상태
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
   // 1. 메모 목록 조회
   const {
     data: memos,
@@ -26,7 +36,7 @@ function App() {
       setContent("");
     },
   });
-  // 삭제 Mutation (낙관적 업데이트 적용)
+  // 3.삭제 Mutation (낙관적 업데이트 적용)
   const deleteMutation = useMutation({
     mutationFn: deleteMemo,
     // 1. 요청 직후 실행: UI를 먼저 변경
@@ -53,6 +63,24 @@ function App() {
       queryClient.invalidateQueries({ queryKey: ["memos"] });
     },
   });
+  // 4.수정 Mutation (성공 시 목록 새로고침)
+  const updateMutation = useMutation({
+    mutationFn: updateMemo,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["memos"] });
+      setEditingId(null); // 수정 모드 종료
+    },
+  });
+
+  // 수정 버튼 클릭 시 초기값 세팅 함수
+  const handleEditStart = (memo: Memo) => {
+    if (memo.id) {
+      setEditingId(memo.id);
+      setEditTitle(memo.title);
+      setEditContent(memo.content);
+    }
+  };
+
   //삭제 이벤트 처리 함수
   const handleDelete = (id: string | undefined) => {
     if (id) deleteMutation.mutate(id);
@@ -109,30 +137,74 @@ function App() {
 
         {/* 메모 목록 그리드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* 메모 목록 그리드 내부 */}
           {memos?.map((memo) => (
             <div
               key={memo.id}
               className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between"
             >
-              <div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                  {memo.title}
-                </h2>
-                <p className="text-gray-600 whitespace-pre-wrap">
-                  {memo.content}
-                </p>
-              </div>
-              <div className="mt-4 flex justify-end gap-2">
-                <button className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded">
-                  수정
-                </button>
-                <button
-                  onClick={() => handleDelete(memo.id)}
-                  className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
-                >
-                  삭제
-                </button>
-              </div>
+              {/* 수정 모드일 때 */}
+              {editingId === memo.id ? (
+                <div className="flex flex-col h-full">
+                  <input
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full mb-2 px-3 py-1 border rounded text-lg font-semibold text-gray-800"
+                  />
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    rows={3}
+                    className="w-full mb-4 px-3 py-1 border rounded text-gray-600 resize-none flex-grow"
+                  />
+                  <div className="flex justify-end gap-2 mt-auto">
+                    <button
+                      onClick={() =>
+                        updateMutation.mutate({
+                          id: memo.id,
+                          title: editTitle,
+                          content: editContent,
+                        })
+                      }
+                      className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded"
+                    >
+                      저장
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="px-3 py-1 text-sm bg-gray-200 text-gray-700 hover:bg-gray-300 rounded"
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* 일반 모드일 때 (기존 코드) */
+                <>
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                      {memo.title}
+                    </h2>
+                    <p className="text-gray-600 whitespace-pre-wrap">
+                      {memo.content}
+                    </p>
+                  </div>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      onClick={() => handleEditStart(memo)}
+                      className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded"
+                    >
+                      수정
+                    </button>
+                    <button
+                      onClick={() => handleDelete(memo.id)}
+                      className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ))}
 
