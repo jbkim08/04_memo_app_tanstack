@@ -28,3 +28,10 @@ export const createMemo = async (newMemo: Memo): Promise<Memo> => {
 export const deleteMemo = async (id: string): Promise<void> => {
   await api.delete(`/memos/${id}`);
 };
+
+// 4. 수정된 메모로 수정하기
+export const updateMemo = async (updatedMemo: Memo): Promise<Memo> => {
+  // id가 URL 경로에 포함되어야 하므로 수정된 객체에서 분리하여 전송
+  const { data } = await api.put(`/memos/${updatedMemo.id}`, updatedMemo);
+  return data;
+};

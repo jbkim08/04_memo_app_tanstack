@@ -6,9 +6,9 @@
       "id": "MisNaHXf_yg"
     },
     {
-      "title": "삭제가 잘됩니다.",
-      "content": "삭제",
-      "id": "ne0vfLuryf8"
+      "title": "낙관적 업데이트",
+      "content": "먼저 삭제부터...",
+      "id": "vtHIYXt4MHI"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
